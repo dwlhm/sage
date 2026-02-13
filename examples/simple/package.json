@@ -1,0 +1,14 @@
+{
+  "name": "simple",
+  "version": "1.0.0",
+  "description": "Simple implementation example of @sage/static",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build"
+  },
+  "dependencies": {
+    "@sage/static": "workspace:*"
+  }
+}
