@@ -5,7 +5,6 @@ export default function main() {
     return {
         static: defineStatic({
             app: App,
-            foo: 'dwlhm bar'
         })
     }
 }
