@@ -1,0 +1,18 @@
+# Dependency
+node_modules/
+
+# Build outputs
+dist/
+.next/
+.output/
+out/
+build/
+target/
+
+# Logs & Config
+.pnpm-debug.log
+.env*
+
+# Static assets (optional, biar gak berat scan gambar/font)
+public/
+assets/
