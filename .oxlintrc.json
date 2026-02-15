@@ -9,6 +9,7 @@
   },
   "rules": {
     "eslint/no-unused-vars": "error",
-    "no-console": "warn"
+    "no-console": "warn",
+    "sort-imports": "off"
   }
 }

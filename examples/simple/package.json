@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "Simple implementation example of @sage/static",
   "private": true,
+  "sideEffects": false,
   "type": "module",
+  "packageManager": "pnpm@10.17.1",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -11,6 +13,13 @@
     "lint:fix": "oxlint --fix"
   },
   "dependencies": {
-    "@sage/static": "workspace:*"
+    "@sage/static": "workspace:*",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "vite": "^7.3.1"
   }
 }

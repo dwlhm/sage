@@ -2,10 +2,17 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src"
+    "jsx": "react-jsx"
   },
-  "include": ["src", "vite.config.ts", "env.d.ts", "index.html"],
+  "include": [
+    "src",
+    "vite.config.ts",
+    "env.d.ts",
+    "index.html"
+  ],
   "references": [
-    { "path": "../../packages/static"}
+    {
+      "path": "../../packages/static"
+    }
   ]
 }

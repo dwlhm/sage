@@ -1,1 +1,1 @@
-export const add = (a: number, b: number) => a * b
+export { defineStatic, type IUserOptions } from './define'
