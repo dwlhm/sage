@@ -1,1 +1,1 @@
-export { defineStatic, type IUserOptions } from './define'
+export { type Config, type ConfigEntry } from './core/type'

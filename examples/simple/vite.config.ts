@@ -1,11 +1,10 @@
 import { defineConfig } from 'vite'
 
-import { sageStatic } from '@sage/static/vite'
+import { sageStaticPlugin } from '@sage/static/vite'
+
 
 export default defineConfig({
     plugins: [
-        sageStatic({
-            entry: '/src/entry-sage.tsx',
-        }),
+        sageStaticPlugin()
     ],
 })

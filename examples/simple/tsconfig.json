@@ -8,6 +8,7 @@
     "src",
     "vite.config.ts",
     "env.d.ts",
-    "index.html"
+    "index.html",
+    "ssg.config.ts"
   ]
 }

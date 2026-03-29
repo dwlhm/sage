@@ -4,14 +4,17 @@
   "description": "Generate React codebase to static HTML",
   "type": "module",
   "sideEffects": false,
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
     "./vite": {
-      "types": "./dist/vite/plugin.d.ts",
-      "import": "./dist/vite/plugin.js"
+      "types": "./dist/vite.d.ts",
+      "import": "./dist/vite.js"
     }
   },
   "publishConfig": {
