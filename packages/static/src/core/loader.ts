@@ -26,3 +26,24 @@ export const loadConfig = async (server: ViteDevServer): Promise<Config> => {
 
     return config
 }
+
+export const loadClient = (id: string) => {
+    const [, page] = id.split('page=.')
+    if (!page) { return }
+
+    return `
+        import React from "react"
+        import { hydrateRoot } from "react-dom/client"
+        import { Root } from "@sage/static/react"
+
+        const mount = async () => {
+            const { default: Component } = await import("${page}")
+            hydrateRoot(
+                document,
+                React.createElement(Root, null, React.createElement(Component))
+            )
+        }
+
+        mount()
+    `
+}

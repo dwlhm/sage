@@ -26,7 +26,15 @@ const renderPage = async ({
     const Component = await loadComponent(server, importPath)
     const html = await renderToStatic(React.createElement(root || Document, undefined, React.createElement(Component)))
     const transformedHtml = await server.transformIndexHtml(pagePath, html)
-    sendHtml(res, transformedHtml)
+
+    const clientEntry = `\0virtual:sage-client?page=${importPath}`
+
+    const htmlWithScript = transformedHtml.replace(
+        "</body>",
+        `<script type="module" src="${clientEntry}"></script></body>`
+    )
+
+    sendHtml(res, htmlWithScript)
 }
 
 export const handleDevRequest = (server: ViteDevServer, config: Config): Connect.NextHandleFunction =>
@@ -40,7 +48,7 @@ export const handleDevRequest = (server: ViteDevServer, config: Config): Connect
             importPath: entry._importPath,
             pagePath: entry.path,
             res: res as ServerResponse,
-            root: config.root,
+            root: Document,
             server,
         })
             .catch((error: unknown) => { next(error) })

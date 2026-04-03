@@ -6,7 +6,7 @@ export default defineConfig({
     entry: [
         'src/index.ts',
         'src/vite.ts',
-        'src/components/document.tsx',
+        'src/react.ts',
     ],
     external: ['vite'],
     format: ['esm'],

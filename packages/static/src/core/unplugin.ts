@@ -1,7 +1,7 @@
 import { createUnplugin, type UnpluginFactory } from "unplugin";
 import type { ResolvedConfig } from "vite";
 import { transformConfig } from "./transform";
-import { loadConfig } from "./loader";
+import { loadClient, loadConfig } from "./loader";
 import { handleDevRequest } from "./handler";
 import { buildPages } from "./builder";
 
@@ -10,7 +10,19 @@ const unpluginFactory: UnpluginFactory<undefined, false>
         let resolvedConfig: ResolvedConfig = undefined as unknown as ResolvedConfig
 
         return {
+            load(id) {
+                if (id.includes('virtual:sage-client')) {
+                    return loadClient(id)
+                }
+            },
+
             name: 'sage-static',
+
+            resolveId(id) {
+                if (id.startsWith('virtual:sage-client')) {
+                    return `\0${id}`
+                }
+            },
 
             transform(code, id) {
                 if (id.includes('ssg.config')) {
