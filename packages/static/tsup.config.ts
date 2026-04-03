@@ -8,6 +8,7 @@ export default defineConfig({
         'src/vite.ts',
         'src/components/document.tsx',
     ],
+    external: ['vite'],
     format: ['esm'],
     sourcemap: true,
     splitting: false,

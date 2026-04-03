@@ -4,7 +4,7 @@ export default {
     entries: [
         {
             component: () => import("./src/App"),
-            out: "post/index.html",
+            out: "index.html",
             path: "/",
         },
         {
