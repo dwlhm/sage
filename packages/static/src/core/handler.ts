@@ -12,13 +12,13 @@ import {
     VIRTUAL_MODULE_NULL_PREFIX,
     VIRTUAL_SAGE_CLIENT_ID,
 } from "./virtual-sage-client";
+import { sanitizeAttrValue } from "../utils/sanitize";
 
 interface RenderPage {
     server: ViteDevServer,
     importPath: string,
     pagePath: string,
     res: ServerResponse,
-    root: React.ComponentType<{ children: React.ReactNode }>
 }
 
 const renderPage = async ({
@@ -26,13 +26,12 @@ const renderPage = async ({
     importPath,
     pagePath,
     res,
-    root,
 }: RenderPage): Promise<void> => {
     const Component = await loadComponent(server, importPath)
-    const html = await renderToStatic(React.createElement(root || Document, undefined, React.createElement(Component)))
+    const html = await renderToStatic(React.createElement(Document, undefined, React.createElement(Component)))
     const transformedHtml = await server.transformIndexHtml(pagePath, html)
 
-    const resolvedClientId = `${VIRTUAL_MODULE_NULL_PREFIX}${VIRTUAL_SAGE_CLIENT_ID}?page=${importPath}`
+    const resolvedClientId = `${VIRTUAL_MODULE_NULL_PREFIX}${VIRTUAL_SAGE_CLIENT_ID}?page=${sanitizeAttrValue(importPath)}`
     const clientEntry = toViteDevModuleUrl(resolvedClientId)
 
     const htmlWithScript = transformedHtml.replace(
@@ -54,7 +53,6 @@ export const handleDevRequest = (server: ViteDevServer, config: Config): Connect
             importPath: entry._importPath,
             pagePath: entry.path,
             res: res as ServerResponse,
-            root: Document,
             server,
         })
             .catch((error: unknown) => { next(error) })

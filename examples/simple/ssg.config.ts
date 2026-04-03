@@ -1,5 +1,3 @@
-import Document from "./src/Document"
-
 export default {
     entries: [
         {
@@ -13,5 +11,4 @@ export default {
             path: "/about",
         }
     ],
-    root: Document,
 }

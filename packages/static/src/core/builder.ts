@@ -9,7 +9,6 @@ import Document from '../components/document'
 interface RenderEntryOptions {
     entry: { _importPath: string; out: string };
     outDir: string;
-    root: React.ComponentType<{ children: React.ReactNode }>;
     server: ViteDevServer;
 }
 
@@ -32,7 +31,6 @@ const scriptSrcForChunk = (outPath: string, outDir: string, chunkFileName: strin
 const renderEntry = async ({
     entry,
     outDir,
-    root,
     server,
     outPath,
     clientChunkFileName,
@@ -43,7 +41,7 @@ const renderEntry = async ({
     const Component = await loadComponent(server, entry._importPath)
     let html = await renderToStatic(
         React.createElement(
-            root || Document,
+            Document,
             undefined,
             React.createElement(Component),
         ),
@@ -84,7 +82,6 @@ export const buildPages = async (
                     entry,
                     outDir,
                     outPath,
-                    root: config.root,
                     server,
                 })
             }),
