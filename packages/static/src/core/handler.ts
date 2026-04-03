@@ -7,6 +7,11 @@ import { loadComponent } from "./loader";
 import { renderToStatic } from "./renderer";
 import type { Config } from "./type";
 import Document from "../components/document";
+import {
+    toViteDevModuleUrl,
+    VIRTUAL_MODULE_NULL_PREFIX,
+    VIRTUAL_SAGE_CLIENT_ID,
+} from "./virtual-sage-client";
 
 interface RenderPage {
     server: ViteDevServer,
@@ -27,7 +32,8 @@ const renderPage = async ({
     const html = await renderToStatic(React.createElement(root || Document, undefined, React.createElement(Component)))
     const transformedHtml = await server.transformIndexHtml(pagePath, html)
 
-    const clientEntry = `\0virtual:sage-client?page=${importPath}`
+    const resolvedClientId = `${VIRTUAL_MODULE_NULL_PREFIX}${VIRTUAL_SAGE_CLIENT_ID}?page=${importPath}`
+    const clientEntry = toViteDevModuleUrl(resolvedClientId)
 
     const htmlWithScript = transformedHtml.replace(
         "</body>",

@@ -1,15 +1,19 @@
+import type { ComponentType } from "react";
 import type { ViteDevServer } from "vite";
-import React from "react";
 import type { Config } from "./type";
+import { getPageParamFromModuleId, pageImportToViteRootSpecifier } from "./virtual-sage-client";
 
 const SSG_CONFIG_PATH = './ssg.config.ts'
 
-export const loadComponent = async (server: ViteDevServer, importPath: string): Promise<React.ComponentType> => {
+export const loadComponent = async (
+    server: ViteDevServer,
+    importPath: string,
+): Promise<ComponentType> => {
     const mod: Record<string, unknown> = await server.ssrLoadModule(importPath)
     if (typeof mod.default !== 'function') {
         throw new TypeError(`Module "${importPath}" does not export a valid default component`)
     }
-    return mod.default as React.ComponentType
+    return mod.default as ComponentType
 }
 
 export const loadConfig = async (server: ViteDevServer): Promise<Config> => {
@@ -27,9 +31,13 @@ export const loadConfig = async (server: ViteDevServer): Promise<Config> => {
     return config
 }
 
-export const loadClient = (id: string) => {
-    const [, page] = id.split('page=.')
-    if (!page) { return }
+export const loadClient = (moduleId: string) => {
+    const page = getPageParamFromModuleId(moduleId)
+    if (!page) {
+        return
+    }
+
+    const rootImport = JSON.stringify(pageImportToViteRootSpecifier(page))
 
     return `
         import React from "react"
@@ -37,7 +45,7 @@ export const loadClient = (id: string) => {
         import { Root } from "@sage/static/react"
 
         const mount = async () => {
-            const { default: Component } = await import("${page}")
+            const { default: Component } = await import(${rootImport})
             hydrateRoot(
                 document,
                 React.createElement(Root, null, React.createElement(Component))

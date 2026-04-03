@@ -1,42 +1,57 @@
 import { createUnplugin, type UnpluginFactory } from "unplugin";
 import type { ResolvedConfig } from "vite";
-import { transformConfig } from "./transform";
-import { loadClient, loadConfig } from "./loader";
-import { handleDevRequest } from "./handler";
+import { logSageStaticBuildDone, logSageStaticBuildStart } from "./build-log";
 import { buildPages } from "./builder";
+import { handleDevRequest } from "./handler";
+import { loadClient, loadConfig } from "./loader";
+import { mergeSsgBuildRollupInput } from "./ssg-rollup-input";
+import { transformConfig } from "./transform";
+import {
+    getPageParamFromModuleId,
+    isSageClientVirtualModule,
+    resolveSageClientVirtualId,
+} from "./virtual-sage-client";
+
+/** Prevents infinite recursion when `mergeSsgBuildRollupInput` calls `resolveConfig` / `createServer`. */
+const loadingSsgRollupInput = { current: false }
 
 const unpluginFactory: UnpluginFactory<undefined, false>
     = () => {
         let resolvedConfig: ResolvedConfig = undefined as unknown as ResolvedConfig
+        const clientChunkByImportPath = new Map<string, string>()
 
         return {
-            load(id) {
-                if (id.includes('virtual:sage-client')) {
-                    return loadClient(id)
+            load(moduleId) {
+                if (isSageClientVirtualModule(moduleId)) {
+                    return loadClient(moduleId)
                 }
             },
 
-            name: 'sage-static',
+            name: "sage-static",
 
-            resolveId(id) {
-                if (id.startsWith('virtual:sage-client')) {
-                    return `\0${id}`
+            resolveId(moduleId) {
+                if (isSageClientVirtualModule(moduleId)) {
+                    return resolveSageClientVirtualId(moduleId)
                 }
             },
 
-            transform(code, id) {
-                if (id.includes('ssg.config')) {
+            transform(code, moduleId) {
+                if (moduleId.includes("ssg.config")) {
                     return transformConfig(code)
                 }
             },
 
             vite: {
                 async closeBundle() {
-                    if (resolvedConfig.command === 'build') {
-                        console.log('\n🌿 sage-static: Generating static pages...')
-                        await buildPages(resolvedConfig)
-                        console.log('🌿 sage-static: Done!\n')
+                    if (resolvedConfig.command === "build") {
+                        logSageStaticBuildStart()
+                        await buildPages(resolvedConfig, clientChunkByImportPath)
+                        logSageStaticBuildDone()
                     }
+                },
+
+                config(userConfig, env) {
+                    return mergeSsgBuildRollupInput(userConfig, env, loadingSsgRollupInput)
                 },
 
                 configResolved(config) {
@@ -44,8 +59,19 @@ const unpluginFactory: UnpluginFactory<undefined, false>
                 },
 
                 async configureServer(server) {
-                    const config = await loadConfig(server)
-                    server.middlewares.use(handleDevRequest(server, config))
+                    const ssgConfig = await loadConfig(server)
+                    server.middlewares.use(handleDevRequest(server, ssgConfig))
+                },
+
+                generateBundle(_options, bundle) {
+                    for (const chunk of Object.values(bundle)) {
+                        if (chunk.type === "chunk" && chunk.facadeModuleId) {
+                            const page = getPageParamFromModuleId(chunk.facadeModuleId)
+                            if (page) {
+                                clientChunkByImportPath.set(page, chunk.fileName)
+                            }
+                        }
+                    }
                 },
             },
         }
