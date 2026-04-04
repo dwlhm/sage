@@ -1,16 +1,17 @@
-import { createServer, type ResolvedConfig, type ViteDevServer } from 'vite'
-import React, { ComponentType } from 'react'
-import path from 'node:path'
-import fs from 'node:fs/promises'
-import { loadConfig, loadComponent } from './loader'
-import { renderToStatic } from './renderer'
-import Document from '../components/document'
-import { pageImportToViteRootSpecifier } from './virtual-sage-client'
+import fs from "node:fs/promises"
+import path from "node:path"
+import React, { type ComponentType } from "react"
+import { createServer, type ResolvedConfig, type ViteDevServer } from "vite"
+import Document from "../react/document"
+import { ensureHtmlDocument } from "../server/response"
+import { loadComponent, loadConfig } from "./loader"
+import { renderToStatic } from "./renderer"
+import { transformImportPath } from "./transform"
 
 interface RenderEntryOptions {
-    entry: { _importPath: string; out: string };
-    outDir: string;
-    server: ViteDevServer;
+    entry: { _importPath: string; out: string }
+    outDir: string
+    server: ViteDevServer
 }
 
 const resolveOutDir = (resolvedConfig: ResolvedConfig): string => {
@@ -23,10 +24,10 @@ const resolveOutDir = (resolvedConfig: ResolvedConfig): string => {
 const scriptSrcForChunk = (outPath: string, outDir: string, chunkFileName: string): string => {
     const chunkAbs = path.join(outDir, chunkFileName)
     let rel = path.relative(path.dirname(outPath), chunkAbs)
-    if (!rel.startsWith('.')) {
+    if (!rel.startsWith(".")) {
         rel = `./${rel}`
     }
-    return rel.split(path.sep).join('/')
+    return rel.split(path.sep).join("/")
 }
 
 const renderEntry = async ({
@@ -37,28 +38,29 @@ const renderEntry = async ({
     routes,
     clientChunkFileName,
 }: RenderEntryOptions & {
-    outPath: string;
-    routes: Record<string, () => Promise<ComponentType>>;
-    clientChunkFileName: string | undefined;
+    outPath: string
+    routes: Record<string, () => Promise<ComponentType>>
+    clientChunkFileName: string | undefined
 }): Promise<void> => {
     const Component = await loadComponent(server, entry._importPath)
     let html = await renderToStatic(
         React.createElement(
             Document,
-            { children: React.createElement(Component), routes }
+            { routes },
+            React.createElement(Component),
         ),
     )
 
     if (clientChunkFileName) {
         const src = scriptSrcForChunk(outPath, outDir, clientChunkFileName)
         html = html.replace(
-            '</body>',
+            "</body>",
             `<script type="module" src="${src}"></script></body>`,
         )
     }
 
     await fs.mkdir(path.dirname(outPath), { recursive: true })
-    await fs.writeFile(outPath, html, 'utf8')
+    await fs.writeFile(outPath, ensureHtmlDocument(html), "utf8")
 }
 
 export const buildPages = async (
@@ -66,8 +68,8 @@ export const buildPages = async (
     clientChunkByImportPath?: ReadonlyMap<string, string>,
 ): Promise<void> => {
     const server = await createServer({
-        plugins: resolvedConfig.plugins.map(plugin => {
-            if (plugin.name === 'sage-static') {
+        plugins: resolvedConfig.plugins.map((plugin) => {
+            if (plugin.name === "sage-static") {
                 return {
                     ...plugin,
                     closeBundle: undefined,
@@ -88,7 +90,7 @@ export const buildPages = async (
         const outDir = resolveOutDir(resolvedConfig)
 
         const routes = config.entries.reduce((acc, entry) => {
-            acc[entry.path] = () => import(pageImportToViteRootSpecifier(entry._importPath))
+            acc[entry.path] = () => import(transformImportPath(entry._importPath))
             return acc
         }, {} as Record<string, () => Promise<ComponentType>>)
 

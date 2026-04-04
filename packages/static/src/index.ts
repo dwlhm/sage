@@ -1,1 +1,1 @@
-export { type Config, type ConfigEntry } from './core/type'
+export type { Config, ConfigEntry } from "./ssg/types"

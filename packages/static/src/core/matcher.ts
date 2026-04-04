@@ -1,1 +1,0 @@
-export const IMPORT_PATH_REGEX = /import\(\s*["'`](.+?)["'`]\s*\)/g

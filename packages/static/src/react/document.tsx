@@ -1,15 +1,13 @@
-import React, { useEffect, useState } from 'react'
-import type { ComponentType } from 'react'
+import React, { type ComponentType, type PropsWithChildren, useEffect, useState } from "react"
 
-export default function Document(
-    { children, routes }:
-        {
-            children: React.ReactNode,
-            routes: Record<string, () => Promise<ComponentType>>
-        }
-) {
+interface DocumentProps {
+    routes: Record<string, () => Promise<ComponentType>>
+    lang?: string
+}
+
+export default function Document({ children, routes, lang = "en" }: PropsWithChildren<DocumentProps>) {
     return (
-        <html>
+        <html lang={lang}>
             <head>
                 <title>Sage Simple Example</title>
             </head>
@@ -23,8 +21,8 @@ export default function Document(
 }
 
 const RoutesContext = React.createContext<{
-    navigateTo: (path: string) => void;
-    routes: Record<string, () => Promise<ComponentType>>;
+    navigateTo: (path: string) => void
+    routes: Record<string, () => Promise<ComponentType>>
 }>({
     navigateTo: () => { },
     routes: {},
@@ -58,7 +56,7 @@ export const RoutesProvider = ({ children, routes }: { children: React.ReactNode
         return () => {
             globalThis.removeEventListener("popstate", handlePopState)
         }
-    }, [])
+    }, [routes])
 
     return (
         <RoutesContext.Provider value={{ navigateTo, routes }}>

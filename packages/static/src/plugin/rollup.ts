@@ -5,9 +5,9 @@
 import fs from "node:fs"
 import path from "node:path"
 import { createServer, resolveConfig, type ConfigEnv, type UserConfig } from "vite"
-import type { Config, ConfigEntry } from "./type"
-import { loadConfig } from "./loader"
-import { VIRTUAL_MODULE_NULL_PREFIX, VIRTUAL_SAGE_CLIENT_ID } from "./virtual-sage-client"
+import { VIRTUAL_MODULE_NULL_PREFIX, VIRTUAL_SAGE_CLIENT_ID } from "../constants"
+import type { Config, ConfigEntry } from "../ssg/types"
+import { loadConfig } from "../ssg/loader"
 
 const ENTRY_OUT_SANITIZE = /[^a-zA-Z0-9_-]/g
 
@@ -112,7 +112,7 @@ export const loadSsgConfigFromBuildContext = async (projectRoot: string) => {
 
 const buildRollupInputWithSsgClients = async (
     config: UserConfig,
-    onConfigLoaded?: (c: Config) => void
+    onConfigLoaded?: (c: Config) => void,
 ): Promise<Record<string, string>> => {
     const root = config.root ?? process.cwd()
     const ssg = await loadSsgConfigFromBuildContext(root)
@@ -128,11 +128,14 @@ const buildRollupInputWithSsgClients = async (
  * Uses `loadingGuard` to skip nested config merges while we spin up a temporary server to read `ssg.config.ts`.
  */
 export const mergeSsgBuildRollupInput = async ({
-    config, env, loadingGuard, onConfigLoaded
+    config,
+    env,
+    loadingGuard,
+    onConfigLoaded,
 }: {
-    config: UserConfig,
-    env: ConfigEnv,
-    loadingGuard: { current: boolean },
+    config: UserConfig
+    env: ConfigEnv
+    loadingGuard: { current: boolean }
     onConfigLoaded?: (c: Config) => void
 }): Promise<UserConfig | Record<string, never>> => {
     if (loadingGuard.current) {
