@@ -1,1 +1,1 @@
-export { default as Root } from './components/document'
+export { default as Root, useRoutes } from './components/document'

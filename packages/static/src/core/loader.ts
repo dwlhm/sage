@@ -31,11 +31,15 @@ export const loadConfig = async (server: ViteDevServer): Promise<Config> => {
     return config
 }
 
-export const loadClient = (moduleId: string) => {
+export const loadClient = (moduleId: string, config?: Config) => {
     const page = getPageParamFromModuleId(moduleId)
     if (!page) {
         return
     }
+
+    const routesCode = config?.entries.map((item) => `
+        "${item.path}": () => import("${pageImportToViteRootSpecifier(item._importPath)}")
+    `).join(",")
 
     const rootImport = JSON.stringify(pageImportToViteRootSpecifier(page))
 
@@ -45,10 +49,12 @@ export const loadClient = (moduleId: string) => {
         import { Root } from "@sage/static/react"
 
         const mount = async () => {
+            const routes = {${routesCode}}
+            console.log('routes nih guys', routes)
             const { default: Component } = await import(${rootImport})
             hydrateRoot(
                 document,
-                React.createElement(Root, null, React.createElement(Component))
+                React.createElement(Root, { routes }, React.createElement(Component))
             )
         }
 

@@ -5,7 +5,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import { createServer, resolveConfig, type ConfigEnv, type UserConfig } from "vite"
-import type { ConfigEntry } from "./type"
+import type { Config, ConfigEntry } from "./type"
 import { loadConfig } from "./loader"
 import { VIRTUAL_MODULE_NULL_PREFIX, VIRTUAL_SAGE_CLIENT_ID } from "./virtual-sage-client"
 
@@ -110,9 +110,15 @@ export const loadSsgConfigFromBuildContext = async (projectRoot: string) => {
     }
 }
 
-const buildRollupInputWithSsgClients = async (config: UserConfig): Promise<Record<string, string>> => {
+const buildRollupInputWithSsgClients = async (
+    config: UserConfig,
+    onConfigLoaded?: (c: Config) => void
+): Promise<Record<string, string>> => {
     const root = config.root ?? process.cwd()
     const ssg = await loadSsgConfigFromBuildContext(root)
+    if (onConfigLoaded) {
+        onConfigLoaded(ssg)
+    }
     const extraInputs = buildVirtualClientRollupInputs(ssg.entries)
     return mergeRollupInputWithSsgClients(root, config.build?.rollupOptions?.input, extraInputs)
 }
@@ -121,11 +127,14 @@ const buildRollupInputWithSsgClients = async (config: UserConfig): Promise<Recor
  * When resolving the user Vite config, merges Rollup inputs so each SSG page gets a client bundle.
  * Uses `loadingGuard` to skip nested config merges while we spin up a temporary server to read `ssg.config.ts`.
  */
-export const mergeSsgBuildRollupInput = async (
+export const mergeSsgBuildRollupInput = async ({
+    config, env, loadingGuard, onConfigLoaded
+}: {
     config: UserConfig,
     env: ConfigEnv,
     loadingGuard: { current: boolean },
-): Promise<UserConfig | Record<string, never>> => {
+    onConfigLoaded?: (c: Config) => void
+}): Promise<UserConfig | Record<string, never>> => {
     if (loadingGuard.current) {
         return {}
     }
@@ -134,7 +143,7 @@ export const mergeSsgBuildRollupInput = async (
     }
     loadingGuard.current = true
     try {
-        const merged = await buildRollupInputWithSsgClients(config)
+        const merged = await buildRollupInputWithSsgClients(config, onConfigLoaded)
         return {
             build: {
                 rollupOptions: {

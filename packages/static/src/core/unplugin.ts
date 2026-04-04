@@ -11,6 +11,7 @@ import {
     isSageClientVirtualModule,
     resolveSageClientVirtualId,
 } from "./virtual-sage-client";
+import type { Config } from "./type";
 
 /** Prevents infinite recursion when `mergeSsgBuildRollupInput` calls `resolveConfig` / `createServer`. */
 const loadingSsgRollupInput = { current: false }
@@ -19,11 +20,12 @@ const unpluginFactory: UnpluginFactory<undefined, false>
     = () => {
         let resolvedConfig: ResolvedConfig = undefined as unknown as ResolvedConfig
         const clientChunkByImportPath = new Map<string, string>()
+        let activeConfig: Config | undefined = undefined
 
         return {
             load(moduleId) {
                 if (isSageClientVirtualModule(moduleId)) {
-                    return loadClient(moduleId)
+                    return loadClient(moduleId, activeConfig)
                 }
             },
 
@@ -51,7 +53,14 @@ const unpluginFactory: UnpluginFactory<undefined, false>
                 },
 
                 config(userConfig, env) {
-                    return mergeSsgBuildRollupInput(userConfig, env, loadingSsgRollupInput)
+                    return mergeSsgBuildRollupInput({
+                        config: userConfig,
+                        env,
+                        loadingGuard: loadingSsgRollupInput,
+                        onConfigLoaded: (config) => {
+                            activeConfig = config;
+                        }
+                    })
                 },
 
                 configResolved(config) {
@@ -60,6 +69,7 @@ const unpluginFactory: UnpluginFactory<undefined, false>
 
                 async configureServer(server) {
                     const ssgConfig = await loadConfig(server)
+                    activeConfig = ssgConfig
                     server.middlewares.use(handleDevRequest(server, ssgConfig))
                 },
 
