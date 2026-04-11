@@ -1,15 +1,15 @@
-# Source layout (`@sage/static`)
+# Layout sumber `packages/static/src`
 
-Peta singkat agar mudah navigasi:
+Ringkasan modul untuk navigasi kode. Gambaran pipeline lengkap: [README paket](../README.md) dan [arsitektur internal](../../../docs/INTERNALS.md).
 
-| Folder / file | Isi |
-|---------------|-----|
-| **`index.ts`**, **`vite.ts`**, **`react.ts`** | Entry publik paket (types, plugin Vite, shell React). |
-| **`constants.ts`** | Konstanta global (path `ssg.config`, prefix virtual module Vite, dll.). |
-| **`plugin/`** | Integrasi **Vite / unplugin / Rollup**: plugin utama, merge `input`, modul virtual hydrate. |
-| **`ssg/`** | Alur **static site generation**: load config, render HTML, build file statik, dev middleware, transform `ssg.config.ts`. |
-| **`server/`** | Utilitas **HTTP dev** (response HTML, doctype). |
-| **`react/`** | Komponen React internal (document shell, helper, types). Dipublikasikan lewat `@sage/static/react`. |
-| **`utils/`** | Kecil & reusable: sanitize, log build. |
+| Folder / file | Peran |
+|---------------|--------|
+| `index.ts`, `vite.ts`, `react.ts` | Entry publik: tipe, adapter Vite (`sageStaticPlugin`), ekspor React (`Root`, `useRoutes`). |
+| `constants.ts` | Path `ssg.config`, id modul virtual, prefix `/@id/` Vite. |
+| `plugin/` | Unplugin + Rollup: merge `input`, resolve/load modul virtual hydrate, transform `ssg.config.ts`. |
+| `ssg/` | Pipeline SSG: load/validasi config, matcher/transform path, resolver pathname, handler dev, renderer prerender, builder tulis HTML. |
+| `server/` | Respons HTTP dev (DOCTYPE, `Content-Type`, kirim HTML). |
+| `react/` | Shell dokumen, provider rute, helper; dipublikasikan lewat `@sage/static/react`. |
+| `utils/` | Sanitasi atribut HTML, log build. |
 
-Alur membaca kode: mulai dari `vite.ts` → `plugin/unplugin.ts` → folder `ssg/` untuk pipeline render/build.
+Urutan baca yang disarankan: `vite.ts` → `plugin/unplugin.ts` → `ssg/builder.ts` / `ssg/handler.ts` + `ssg/renderer.ts`.
